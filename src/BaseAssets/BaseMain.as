@@ -23,7 +23,7 @@ package BaseAssets
 		protected var feedbackScreen:FeedBackScreen;
 		protected var statsScreen:StatsScreen;
 		
-		private var hasStats:Boolean = true;
+		private var hasStats:Boolean = false;
 		
 		public var botoes:Botoes;
 		private var bordaAtividade:Borda;
