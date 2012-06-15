@@ -302,9 +302,20 @@ package
 				addFilter(item.label, acertou);
 			}
 			
-			addFilter(label_carpelo, (compareString(label_carpelo.label.text, answers["label_carpelo"]) <= 1));
-			addFilter(label_androceu, (compareString(label_androceu.label.text, answers["label_androceu"]) <= 1));
-			addFilter(label_corola, (compareString(label_corola.label.text, answers["label_corola"]) <= 1));
+			var names:Array = ["label_carpelo", "label_androceu", "label_corola"];
+			for each (var itemNames:String in names) 
+			{
+				userAns = String(this[itemNames].label.text).toLowerCase();
+				acertou = false;
+				lookName: for each (var itemStr2:String in answers[itemNames])
+				{
+					if (compareString(itemStr2, userAns) <= 1) {
+						acertou = true;
+						break lookName;
+					}
+				}
+				addFilter(this[itemNames], acertou);
+			}
 			
 			score = Math.round(nCertas / nTotal);
 			
@@ -337,7 +348,6 @@ package
 		
 		private function compareString(str1:String, str2:String):int
 		{
-			//return (str1 == str2 ? 0 : 2);
 			return levenshteinDistance(str1, str2);
 		}
 		
