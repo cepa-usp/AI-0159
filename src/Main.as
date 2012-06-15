@@ -1,6 +1,11 @@
 package 
 {
 	import BaseAssets.BaseMain;
+	import com.adobe.serialization.json.JSON;
+	import flash.events.KeyboardEvent;
+	import flash.events.TimerEvent;
+	import flash.external.ExternalInterface;
+	import flash.geom.Rectangle;
 	import cepa.utils.levenshteinDistance;
 	import flash.display.MovieClip;
 	import flash.display.Stage;
@@ -10,6 +15,8 @@ package
 	import flash.geom.Point;
 	import flash.text.TextField;
 	import flash.utils.Dictionary;
+	import flash.utils.Timer;
+	import pipwerks.SCORM;
 	/**
 	 * ...
 	 * @author Alexandre
@@ -34,7 +41,18 @@ package
 			
 			groupPieces();
 			addListeners();
-			//randomizePositions();
+			randomizePositions();
+			
+			if (ExternalInterface.available) {
+				initLMSConnection();
+				if (mementoSerialized != null) {
+					if (mementoSerialized != "" && mementoSerialized != "null") {
+						status = JSON.decode(mementoSerialized);
+						recoverStatus();
+					}
+				}
+			}
+			
 		}
 		
 		private function groupPieces():void 
@@ -117,10 +135,25 @@ package
 			
 			finaliza.addEventListener(MouseEvent.CLICK, finishExercise);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, stageClick);
+			feedbackScreen.addEventListener(Event.CLOSE, closeFeedback);
+			
+			stage.addEventListener(KeyboardEvent.KEY_UP, keyUpHandler);
 		}
 		
+		private function keyUpHandler(e:KeyboardEvent):void 
+		{
+			if (e.target.name == "label") saveStatus();
+		}
+		
+		private function closeFeedback(e:Event):void 
+		{
+			alowRemoveFilter = true;
+		}
+		
+		private var alowRemoveFilter:Boolean = true;
 		private function stageClick(e:MouseEvent):void 
 		{
+			if (!alowRemoveFilter) return;
 			if(e.target.parent != label_carpelo && e.target.parent != label_androceu && e.target.parent != label_corola) removeFilters();
 		}
 		
@@ -168,19 +201,37 @@ package
 		}
 		
 		private var pecaDragging:MovieClip;
+		private var posClickLocal:Point = new Point();
+		private var posMeioRect:Point = new Point();
 		private function initDrag(e:MouseEvent):void 
 		{
 			if (e.target is TextField) return;
 			
 			pecaDragging = MovieClip(e.target);
-			pecaDragging.startDrag();
+			posClickLocal.x = pecaDragging.mouseX;
+			posClickLocal.y = pecaDragging.mouseY;
+			var rectPeca:Rectangle;
+			if (pecasCInner.indexOf(pecaDragging) >= 0) rectPeca = pecaDragging.inner.getBounds(stage);
+			else rectPeca = pecaDragging.getBounds(stage);
+			posMeioRect.x = pecaDragging.x - (rectPeca.x + rectPeca.width / 2);
+			posMeioRect.y = pecaDragging.y - (rectPeca.y + rectPeca.height / 2);
+			//pecaDragging.startDrag();
 			stage.addEventListener(MouseEvent.MOUSE_UP, stopDragging);
+			stage.addEventListener(MouseEvent.MOUSE_MOVE, movingPeca);
+		}
+		
+		private function movingPeca(e:MouseEvent):void 
+		{
+			pecaDragging.x = Math.max(posMeioRect.x + 5, Math.min(stage.stageWidth + posMeioRect.x - 5, stage.mouseX - posClickLocal.x));
+			pecaDragging.y = Math.max(posMeioRect.y + 5, Math.min(stage.stageHeight+ posMeioRect.y - 5, stage.mouseY - posClickLocal.y));
 		}
 		
 		private function stopDragging(e:MouseEvent):void 
 		{
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE, movingPeca);
 			stage.removeEventListener(MouseEvent.MOUSE_UP, stopDragging);
 			pecaDragging.stopDrag();
+			saveStatus();
 		}
 		
 		private function randomizePositions():void 
@@ -202,6 +253,7 @@ package
 		
 		private function finishExercise(e:MouseEvent):void 
 		{
+			alowRemoveFilter = false;
 			if (!verificaTerminei()) {
 				feedbackScreen.setText("Você precisa digitar todas as respostas para finalizar a atividade.");
 				return;
@@ -254,7 +306,14 @@ package
 			addFilter(label_androceu, (compareString(label_androceu.label.text, answers["label_androceu"]) <= 1));
 			addFilter(label_corola, (compareString(label_corola.label.text, answers["label_corola"]) <= 1));
 			
-			trace(nCertas, nErradas, nTotal);
+			score = Math.round(nCertas / nTotal);
+			
+			if (score >= 99) {
+				feedbackScreen.setText("Parabéns, você acertou!");
+			}else {
+				feedbackScreen.setText("Tem alguma coisa errada. Observe as peças destacadas em vermelho e tente responder novamente.");
+			}
+			
 		}
 		
 		private function verificaTerminei():Boolean 
@@ -278,6 +337,7 @@ package
 		
 		private function compareString(str1:String, str2:String):int
 		{
+			//return (str1 == str2 ? 0 : 2);
 			return levenshteinDistance(str1, str2);
 		}
 		
@@ -298,14 +358,228 @@ package
 			nTotal++;
 		}
 		
+		private function removeAnswers():void
+		{
+			for each (var item:MovieClip in pecasCInner) 
+			{
+				item.label.label.text = "";
+			}
+			
+			label_carpelo.label.text = "";
+			label_androceu.label.text = "";
+			label_corola.label.text = "";
+		}
+		
+		private var status:Object = { };
+		private function saveStatusForRecovery():void
+		{
+			status.positions = { };
+			status.texts = { };
+			
+			for each (var item:MovieClip in pecas) 
+			{
+				status.positions[item.name] = { };
+				status.positions[item.name].x = item.x;
+				status.positions[item.name].y = item.y;
+			}
+			
+			for each (item in pecasCInner) 
+			{
+				status.texts[item.name] = item.label.label.text;
+			}
+			
+			status.texts.label_carpelo = label_carpelo.label.text;
+			status.texts.label_androceu = label_androceu.label.text;
+			status.texts.label_corola = label_corola.label.text;
+			
+			JSON.encode(status);
+		}
+		
+		private function recoverStatus():void
+		{
+			for each (var item:MovieClip in pecas) 
+			{
+				item.x = status.positions[item.name].x;
+				item.y = status.positions[item.name].y;
+			}
+			
+			for each (item in pecasCInner) 
+			{
+				item.label.label.text = status.texts[item.name];
+			}
+			
+			label_carpelo.label.text = status.texts.label_carpelo;
+			label_androceu.label.text = status.texts.label_androceu;
+			label_corola.label.text = status.texts.label_corola;
+		}
+		
 		override public function reset(e:MouseEvent = null):void
 		{
+			removeAnswers();
 			randomizePositions();
+			saveStatus();
 		}
 		
 		override public function iniciaTutorial(e:MouseEvent = null):void
 		{
 			
+		}
+		
+		
+		/*------------------------------------------------------------------------------------------------*/
+		//SCORM:
+		
+		private const PING_INTERVAL:Number = 5 * 60 * 1000; // 5 minutos
+		private var completed:Boolean;
+		private var scorm:SCORM;
+		private var scormExercise:int;
+		private var connected:Boolean;
+		private var score:int = 0;
+		private var pingTimer:Timer;
+		private var mementoSerialized:String = "";
+		
+		/**
+		 * @private
+		 * Inicia a conexão com o LMS.
+		 */
+		private function initLMSConnection () : void
+		{
+			completed = false;
+			connected = false;
+			scorm = new SCORM();
+			
+			pingTimer = new Timer(PING_INTERVAL);
+			pingTimer.addEventListener(TimerEvent.TIMER, pingLMS);
+			
+			connected = scorm.connect();
+			
+			if (connected) {
+				
+				if (scorm.get("cmi.mode" != "normal")) return;
+				
+				scorm.set("cmi.exit", "suspend");
+				// Verifica se a AI já foi concluída.
+				var status:String = scorm.get("cmi.completion_status");	
+				mementoSerialized = scorm.get("cmi.suspend_data");
+				var stringScore:String = scorm.get("cmi.score.raw");
+				
+				switch(status)
+				{
+					// Primeiro acesso à AI
+					case "not attempted":
+					case "unknown":
+					default:
+						completed = false;
+						break;
+					
+					// Continuando a AI...
+					case "incomplete":
+						completed = false;
+						break;
+					
+					// A AI já foi completada.
+					case "completed":
+						completed = true;
+						//setMessage("ATENÇÃO: esta Atividade Interativa já foi completada. Você pode refazê-la quantas vezes quiser, mas não valerá nota.");
+						break;
+				}
+				
+				//unmarshalObjects(mementoSerialized);
+				scormExercise = 1;
+				score = Number(stringScore.replace(",", "."));
+				
+				var success:Boolean = scorm.set("cmi.score.min", "0");
+				if (success) success = scorm.set("cmi.score.max", "100");
+				
+				if (success)
+				{
+					scorm.save();
+					pingTimer.start();
+				}
+				else
+				{
+					//trace("Falha ao enviar dados para o LMS.");
+					connected = false;
+				}
+			}
+			else
+			{
+				trace("Esta Atividade Interativa não está conectada a um LMS: seu aproveitamento nela NÃO será salvo.");
+				mementoSerialized = ExternalInterface.call("getLocalStorageString");
+			}
+			
+			//reset();
+		}
+		
+		/**
+		 * @private
+		 * Salva cmi.score.raw, cmi.location e cmi.completion_status no LMS
+		 */ 
+		private function commit()
+		{
+			if (connected)
+			{
+				if (scorm.get("cmi.mode" != "normal")) return;
+				
+				// Salva no LMS a nota do aluno.
+				var success:Boolean = scorm.set("cmi.score.raw", score.toString());
+
+				// Notifica o LMS que esta atividade foi concluída.
+				success = scorm.set("cmi.completion_status", (completed ? "completed" : "incomplete"));
+				
+				//success = scorm.set("cmi.exit", (completed ? "normal" : "suspend"));
+				
+				//Notifica o LMS se o aluno passou ou falhou na atividade, de acordo com a pontuação:
+				success = scorm.set("cmi.success_status", (score > 75 ? "passed" : "failed"));
+
+				// Salva no LMS o exercício que deve ser exibido quando a AI for acessada novamente.
+				success = scorm.set("cmi.location", scormExercise.toString());
+				
+				// Salva no LMS a string que representa a situação atual da AI para ser recuperada posteriormente.
+				//mementoSerialized = marshalObjects();
+				success = scorm.set("cmi.suspend_data", mementoSerialized.toString());
+
+				if (success)
+				{
+					scorm.save();
+				}
+				else
+				{
+					pingTimer.stop();
+					//setMessage("Falha na conexão com o LMS.");
+					connected = false;
+				}
+			}else { //LocalStorage
+				ExternalInterface.call("save2LS", mementoSerialized);
+			}
+		}
+		
+		/**
+		 * @private
+		 * Mantém a conexão com LMS ativa, atualizando a variável cmi.session_time
+		 */
+		private function pingLMS (event:TimerEvent)
+		{
+			//scorm.get("cmi.completion_status");
+			//commit();
+			saveStatus();
+		}
+		
+		private function saveStatus(e:Event = null):void
+		{
+			if (ExternalInterface.available) {
+				if (connected) {
+					
+					if (scorm.get("cmi.mode" != "normal")) return;
+					
+					saveStatusForRecovery();
+					scorm.set("cmi.suspend_data", mementoSerialized);
+					commit();
+				}else {//LocalStorage
+					saveStatusForRecovery();
+					ExternalInterface.call("save2LS", mementoSerialized);
+				}
+			}
 		}
 	}
 
