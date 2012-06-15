@@ -392,7 +392,7 @@ package
 			status.texts.label_androceu = label_androceu.label.text;
 			status.texts.label_corola = label_corola.label.text;
 			
-			JSON.encode(status);
+			mementoSerialized = JSON.encode(status);
 		}
 		
 		private function recoverStatus():void
