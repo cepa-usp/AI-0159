@@ -53,6 +53,7 @@ package
 				}
 			}
 			
+			iniciaTutorial();
 		}
 		
 		private function groupPieces():void 
@@ -238,8 +239,8 @@ package
 		{
 			for each (var peca:MovieClip in pecas) 
 			{
-				peca.x = Math.random() * 250 + 200;
-				peca.y = Math.random() * 150 + 350;
+				peca.x = Math.random() * 500 + 100;
+				peca.y = Math.random() * 230 + 320;
 			}
 		}
 		
@@ -430,9 +431,56 @@ package
 			saveStatus();
 		}
 		
+		//---------------- Tutorial -----------------------
+		
+		private var balao:CaixaTexto;
+		private var pointsTuto:Array;
+		private var tutoBaloonPos:Array;
+		private var tutoPos:int;
+		private var tutoSequence:Array = ["Monte a flor arrastando as peças.", 
+										  "Escreva o nome de cada peça que possui um campo de texto como esse.",
+										  "Ao clicar em uma dessas 3 caixas um grupo de peças será destacada.",
+										  "Escreva o nome do grupo em sua caixa correspondente.",
+										  "Ao terminar de montar e classificar clique aqui para avaliar sua resposta."];
+		
 		override public function iniciaTutorial(e:MouseEvent = null):void
 		{
+			tutoPos = 0;
+			if(balao == null){
+				balao = new CaixaTexto(true);
+				addChild(balao);
+				balao.visible = false;
+				
+				pointsTuto = 	[new Point(250, 300),
+								new Point(473 , 542),
+								new Point(595 , 23),
+								new Point(595 , 120),
+								new Point(55 , 35)];
+								
+				tutoBaloonPos = [["", ""],
+								[CaixaTexto.BOTTON, CaixaTexto.LAST],
+								[CaixaTexto.RIGHT, CaixaTexto.FIRST],
+								[CaixaTexto.RIGHT, CaixaTexto.LAST],
+								[CaixaTexto.TOP, CaixaTexto.FIRST]];
+			}
+			balao.removeEventListener(Event.CLOSE, closeBalao);
 			
+			balao.setText(tutoSequence[tutoPos], tutoBaloonPos[tutoPos][0], tutoBaloonPos[tutoPos][1]);
+			balao.setPosition(pointsTuto[tutoPos].x, pointsTuto[tutoPos].y);
+			balao.addEventListener(Event.CLOSE, closeBalao);
+			balao.visible = true;
+		}
+		
+		private function closeBalao(e:Event):void 
+		{
+			tutoPos++;
+			if (tutoPos >= tutoSequence.length) {
+				balao.removeEventListener(Event.CLOSE, closeBalao);
+				balao.visible = false;
+			}else {
+				balao.setText(tutoSequence[tutoPos], tutoBaloonPos[tutoPos][0], tutoBaloonPos[tutoPos][1]);
+				balao.setPosition(pointsTuto[tutoPos].x, pointsTuto[tutoPos].y);
+			}
 		}
 		
 		
