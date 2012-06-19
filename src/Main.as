@@ -80,6 +80,7 @@ package
 			pecas.push(antera6);
 			pecas.push(sepala1);
 			pecas.push(sepala2);
+			pecas.push(ovulo);
 			pecas.push(base);
 			
 			pecasCInner.push(corola1);
@@ -89,6 +90,7 @@ package
 			pecasCInner.push(estilete);
 			pecasCInner.push(ovario);
 			pecasCInner.push(sepala2);
+			pecasCInner.push(ovulo);
 			
 			answers["corola1"] = ["pétala", "petala"];
 			answers["filete1"] = ["filete"];
@@ -97,9 +99,10 @@ package
 			answers["estilete"] = ["estilete"];
 			answers["ovario"] = ["ovario", "ovário"];
 			answers["sepala2"] = ["sepala", "sépala"];
+			answers["ovulo"] = ["ovulo", "óvulo"];
 			
 			pecasFilters["androceu"] = [filete1, filete2, filete3, filete4, filete5, filete6, antera1, antera2, antera3, antera4, antera5, antera6];
-			pecasFilters["gineceu"] = [estigma, estilete, ovario];
+			pecasFilters["gineceu"] = [estigma, estilete, ovario, ovulo];
 			pecasFilters["corola"] = [corola1, corola2, corola3, corola4, corola5];
 			pecasFilters["calice"] = [base, sepala1, sepala2];
 		}
