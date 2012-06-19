@@ -29,6 +29,9 @@ package
 		private var pecasFilters:Dictionary = new Dictionary();
 		private var answers:Dictionary = new Dictionary();
 		
+		private var caixaLabels:CaixaTexto = new CaixaTexto(true);
+		private var comCaixa:Boolean = false;
+		
 		public function Main() 
 		{
 			if (stage) init();
@@ -39,6 +42,7 @@ package
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			
+			addChild(caixaLabels);
 			groupPieces();
 			addListeners();
 			randomizePositions();
@@ -113,6 +117,7 @@ package
 			{
 				peca.inner.mouseEnabled = false;
 				peca.inner.buttonMode = true;
+				//peca.label.fundoLabel.mouseEnabled = false;
 			}
 			
 			for each (peca in pecas) 
@@ -189,6 +194,16 @@ package
 			removeFilters();
 			var labelName:String = String(e.target.name).replace("label_", "");
 			
+			if(comCaixa){
+				if (labelName == "androceu") {
+					caixaLabels.setText("Compõe o Androceu.", CaixaTexto.LEFT, CaixaTexto.CENTER);
+					caixaLabels.setPosition(label_androceu.x - 5, label_androceu.y + 12);
+				}else if (labelName == "gineceu") {
+					caixaLabels.setText("Compõe o Gineceu.", CaixaTexto.LEFT, CaixaTexto.CENTER);
+					caixaLabels.setPosition(label_androceu.x - 5, label_gineceu.y + 12);
+				}
+			}
+			
 			for each (var item:MovieClip in pecas) 
 			{
 				if(pecasFilters[labelName].indexOf(item) < 0){
@@ -200,6 +215,7 @@ package
 		
 		private function unselectLabel(e:MouseEvent):void
 		{
+			if(comCaixa) caixaLabels.visible = false;
 			removeFilters();
 		}
 		
@@ -209,6 +225,8 @@ package
 		private function initDrag(e:MouseEvent):void 
 		{
 			if (e.target is TextField) return;
+			
+			if(e.target.name == "fundoLabel") return;
 			
 			pecaDragging = MovieClip(e.target);
 			posClickLocal.x = pecaDragging.mouseX;
