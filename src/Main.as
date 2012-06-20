@@ -300,6 +300,17 @@ package
 			pecaDragging.y = Math.max(posMeioRect.y + 5, Math.min(stage.stageHeight+ posMeioRect.y - 5, stage.mouseY - posClickLocal.y));
 		}
 		
+		private function setPosition(peca:MovieClip, position:Point):void
+		{
+			var rectPeca:Rectangle;
+			if (pecasCInner.indexOf(peca) >= 0) rectPeca = peca.inner.getBounds(stage);
+			else rectPeca = peca.getBounds(stage);
+			var meioPeca:Point = new Point(peca.x - (rectPeca.x + rectPeca.width / 2), peca.y - (rectPeca.y + rectPeca.height / 2));
+			
+			peca.x = position.x + meioPeca.x;
+			peca.y = position.y + meioPeca.y;
+		}
+		
 		private function stopDragging(e:MouseEvent):void 
 		{
 			stage.removeEventListener(MouseEvent.MOUSE_MOVE, movingPeca);
@@ -333,6 +344,8 @@ package
 		{
 			for each (var peca:MovieClip in pecas) 
 			{
+				if (peca != base) setPosition(peca, new Point(Math.random() * 540 + 25, Math.random() * 515 + 55));
+				/*
 				if (peca != base) {
 					if (peca.name == "estigma") {
 						peca.x = Math.random() * 500 + 100;
@@ -342,8 +355,11 @@ package
 						peca.y = Math.random() * 400 + 150;
 					}
 				}
+				*/
 			}
 		}
+		
+		
 		
 		private var maxDist:Number = 20;
 		private var rightFilter:GlowFilter = new GlowFilter(0x00BF00, 0.8, 6, 6, 3, 2);
