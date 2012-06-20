@@ -169,6 +169,9 @@ package
 		private function keyUpHandler(e:KeyboardEvent):void 
 		{
 			if (e.target.name == "label") saveStatus();
+			if (e.target.parent != null) {
+				if (e.target.parent.name == "label_gineceu") entrada.gotoAndStop(1);
+			}
 		}
 		
 		private function closeFeedback(e:Event):void 
@@ -358,7 +361,7 @@ package
 				//feedbackScreen.setText("Você precisa digitar todas as respostas para finalizar a atividade.");
 				//return;
 			//}
-			
+			entrada.gotoAndStop(1);
 			nCertas = 0;
 			nErradas = 0;
 			nTotal = 0;
@@ -421,6 +424,13 @@ package
 					}
 				}
 				addFilter(item.fundoLabel, acertou);
+				if (item == label_gineceu) {
+					if (acertou) {
+						entrada.gotoAndStop(2);
+						if (answers[item.name].indexOf(itemStr) == 0) entrada.alternativo.text = "formado pelo pistilo";//Gineceu
+						else entrada.alternativo.text = "forma o gineceu";//pistilo
+					}
+				}
 			}
 			
 			score = Math.round((nCertas / nTotal) * 100);
