@@ -310,13 +310,13 @@ package
 		
 		private function verificaPosicaoPecaDragging(pecaDragging:MovieClip):void 
 		{
-			var filetes:Array = ["filete1", "filete2", "filete3", "filete4", "filete5", "filete6"];
+			//var filetes:Array = ["filete1", "filete2", "filete3", "filete4", "filete5", "filete6"];
 			var anteras:Array = ["antera1", "antera2", "antera3", "antera4", "antera5", "antera6"];
 			
 			for each (var peca:MovieClip in pecas) 
 			{
 				if(peca == pecaDragging){
-					if(filetes.indexOf(peca.name) < 0 && anteras.indexOf(peca.name) < 0){
+					if(/*filetes.indexOf(peca.name) < 0 && */anteras.indexOf(peca.name) < 0){
 						if (Point.distance(new Point(peca.x, peca.y), pontoCentral) < maxDist) {
 							pecaDragging.x = pontoCentral.x;
 							pecaDragging.y = pontoCentral.y;
@@ -363,7 +363,7 @@ package
 			nErradas = 0;
 			nTotal = 0;
 			var textsToCompare:Array = [label_calice, label_corola, label_estame, label_androceu, label_gineceu];
-			var filetes:Array = ["filete1", "filete2", "filete3", "filete4", "filete5", "filete6"];
+			//var filetes:Array = ["filete1", "filete2", "filete3", "filete4", "filete5", "filete6"];
 			var anteras:Array = ["antera1", "antera2", "antera3", "antera4", "antera5", "antera6"];
 			var filetesToCompare:Array = [filete1, filete2, filete3, filete4, filete5, filete6];
 			
@@ -371,9 +371,9 @@ package
 			{
 				if (peca == base) continue;
 				
-				if (filetes.indexOf(peca.name) >= 0) {
+				/*if (filetes.indexOf(peca.name) >= 0) {
 					addFilter(peca, MovieClip(ovarioResp).hitTestPoint(peca.x, peca.y));
-				}else if (anteras.indexOf(peca.name) >= 0) {
+				}else */if (anteras.indexOf(peca.name) >= 0) {
 					
 					var fileteFound:Boolean = false;
 					lookFilete: for (var i:int = 0; i < filetesToCompare.length; i++) 
