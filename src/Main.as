@@ -105,10 +105,17 @@ package
 			answers["sepala2"] = ["sepala", "sépala"];
 			answers["ovulo"] = ["ovulo", "óvulo"];
 			
+			answers["label_androceu"] = ["androceu"];
+			answers["label_gineceu"] = ["gineceu", "pistilo"];
+			answers["label_corola"] = ["corola"];
+			answers["label_calice"] = ["calice", "cálice"];
+			answers["label_estame"] = ["estame"];
+			
 			pecasFilters["androceu"] = [filete1, filete2, filete3, filete4, filete5, filete6, antera1, antera2, antera3, antera4, antera5, antera6];
 			pecasFilters["gineceu"] = [estigma, estilete, ovario, ovulo];
 			pecasFilters["corola"] = [corola1, corola2, corola3, corola4, corola5];
-			pecasFilters["calice"] = [base, sepala1, sepala2];
+			pecasFilters["calice"] = [sepala1, sepala2];
+			pecasFilters["estame"] = [filete1, antera1];
 		}
 		
 		private function addListeners():void 
@@ -132,6 +139,7 @@ package
 			makeOverOut(label_gineceu);
 			makeOverOut(label_corola);
 			makeOverOut(label_calice);
+			makeOverOut(label_estame);
 			
 			finaliza.addEventListener(MouseEvent.CLICK, finishExercise);
 			stage.addEventListener(MouseEvent.MOUSE_DOWN, stageClick);
@@ -144,7 +152,18 @@ package
 		{
 			label.addEventListener(MouseEvent.MOUSE_OVER, selectLabel);
 			label.addEventListener(MouseEvent.MOUSE_OUT, unselectLabel);
+			label.addEventListener(MouseEvent.CLICK, confirmSelection);
 			//label.buttonMode = true;
+		}
+		
+		private var labelSelected:Boolean = false;
+		private function confirmSelection(e:MouseEvent):void 
+		{
+			if (labelSelected) {
+				removeFilters();
+				selectLabels(String(e.target.parent.name).replace("label_", ""));
+			}
+			labelSelected = true;
 		}
 		
 		private function keyUpHandler(e:KeyboardEvent):void 
@@ -160,9 +179,22 @@ package
 		private var alowRemoveFilter:Boolean = false;
 		private function stageClick(e:MouseEvent):void 
 		{
-			if (!alowRemoveFilter) return;
-			alowRemoveFilter = false;
-			removeFilters();
+			if (alowRemoveFilter) {
+				alowRemoveFilter = false;
+				removeFilters();
+			}else {
+				if (labelSelected) {
+					if (e.target.parent != null) {
+						if (e.target.parent != label_calice && e.target.parent != label_corola && e.target.parent != label_estame && e.target.parent != label_androceu && e.target.parent != label_gineceu) {
+							removeFilters();
+							labelSelected = false;
+						}
+					}else {
+						removeFilters();
+						labelSelected = false;
+					}
+				}
+			}
 		}
 		
 		private function removeFilters():void 
@@ -176,24 +208,33 @@ package
 			for each (item in pecasCInner) 
 			{
 				item.inner.filters = [];
+				item.label.filters = [];
 			}
 			
 			base.alpha = 1;
 			base.filters = [];
 			
-			for each (item in pecasCInner) 
-			{
-				item.label.filters = [];
-			}
+			label_calice.fundoLabel.filters = [];
+			label_corola.fundoLabel.filters = [];
+			label_estame.fundoLabel.filters = [];
+			label_androceu.fundoLabel.filters = [];
+			label_gineceu.fundoLabel.filters = [];
 			
 		}
 		
 		private var groupFilter:GlowFilter = new GlowFilter(0x0000FF);
 		private function selectLabel(e:MouseEvent):void 
 		{
+			if (alowRemoveFilter) alowRemoveFilter = false;
+			if (labelSelected) return;
 			removeFilters();
-			var labelName:String = String(e.target.name).replace("label_", "");
+			var labelName:String = String(e.target.parent.name).replace("label_", "");
 			
+			selectLabels(labelName);
+		}
+		
+		private function selectLabels(labelName):void
+		{
 			if(comCaixa){
 				if (labelName == "androceu") {
 					caixaLabels.setText("Compõe o Androceu.", CaixaTexto.LEFT, CaixaTexto.CENTER);
@@ -208,14 +249,23 @@ package
 			{
 				if(pecasFilters[labelName].indexOf(item) < 0){
 					item.alpha = 0.2;
-					item.filters = [GRAYSCALE_FILTER];
+					if (item.filters != null) {
+						if (item.filters.length > 0) {
+							item.filters.push(GRAYSCALE_FILTER);
+						}else {
+							item.filters = [GRAYSCALE_FILTER];
+						}
+					}else {
+						item.filters = [GRAYSCALE_FILTER];
+					}
 				}
 			}
 		}
 		
 		private function unselectLabel(e:MouseEvent):void
 		{
-			if(comCaixa) caixaLabels.visible = false;
+			if (comCaixa) caixaLabels.visible = false;
+			if (labelSelected) return;
 			removeFilters();
 		}
 		
@@ -294,7 +344,9 @@ package
 		
 		private var maxDist:Number = 20;
 		private var rightFilter:GlowFilter = new GlowFilter(0x00BF00, 0.8, 6, 6, 3, 2);
+		private var rightFilterInner:GlowFilter = new GlowFilter(0x00BF00, 0.8, 6, 6, 3, 2, true);
 		private var wrongFilter:GlowFilter = new GlowFilter(0xFF0000, 0.8, 6, 6, 3, 2);
+		private var wrongFilterInner:GlowFilter = new GlowFilter(0xFF0000, 0.8, 6, 6, 3, 2, true);
 		
 		private var nCertas:int;
 		private var nErradas:int;
@@ -302,20 +354,23 @@ package
 		
 		private function finishExercise(e:MouseEvent):void 
 		{
-			if (!verificaTerminei()) {
-				feedbackScreen.setText("Você precisa digitar todas as respostas para finalizar a atividade.");
-				return;
-			}
+			//if (!verificaTerminei()) {
+				//feedbackScreen.setText("Você precisa digitar todas as respostas para finalizar a atividade.");
+				//return;
+			//}
 			
 			nCertas = 0;
 			nErradas = 0;
 			nTotal = 0;
+			var textsToCompare:Array = [label_calice, label_corola, label_estame, label_androceu, label_gineceu];
 			var filetes:Array = ["filete1", "filete2", "filete3", "filete4", "filete5", "filete6"];
 			var anteras:Array = ["antera1", "antera2", "antera3", "antera4", "antera5", "antera6"];
 			var filetesToCompare:Array = [filete1, filete2, filete3, filete4, filete5, filete6];
 			
 			for each (var peca:MovieClip in pecas) 
 			{
+				if (peca == base) continue;
+				
 				if (filetes.indexOf(peca.name) >= 0) {
 					addFilter(peca, MovieClip(ovarioResp).hitTestPoint(peca.x, peca.y));
 				}else if (anteras.indexOf(peca.name) >= 0) {
@@ -336,11 +391,15 @@ package
 				}
 			}
 			
-			for each (var item:MovieClip in pecasCInner) 
+			var userAns:String;
+			var acertou:Boolean;
+			var itemStr:String;
+			var item:MovieClip;
+			for each (item in pecasCInner) 
 			{
-				var userAns:String = String(item.label.label.text).toLowerCase();
-				var acertou:Boolean = false;
-				lookStr: for each (var itemStr:String in answers[item.name]) 
+				userAns = String(item.label.label.text).toLowerCase();
+				acertou = false;
+				lookStr: for each (itemStr in answers[item.name]) 
 				{
 					if (compareString(itemStr, userAns) <= 1) {
 						acertou = true;
@@ -348,6 +407,20 @@ package
 					}
 				}
 				addFilter(item.label, acertou);
+			}
+			
+			for each (item in textsToCompare) 
+			{
+				userAns = String(item.label.text);
+				acertou = false;
+				lookAns: for each (itemStr in answers[item.name]) 
+				{
+					if (compareString(itemStr, userAns) <= 1) {
+						acertou = true;
+						break lookAns;
+					}
+				}
+				addFilter(item.fundoLabel, acertou);
 			}
 			
 			score = Math.round((nCertas / nTotal) * 100);
@@ -388,12 +461,12 @@ package
 			
 			if (value) {
 				nCertas++;
-				if (inner) peca.inner.filters = [rightFilter];
-				else peca.filters = [rightFilter];
+				if (inner) peca.inner.filters = [(peca.name == "fundoLabel" ? rightFilterInner : rightFilter)];
+				else peca.filters = [(peca.name == "fundoLabel" ? rightFilterInner : rightFilter)];
 			}else {
 				nErradas++;
-				if (inner) peca.inner.filters = [wrongFilter];
-				else peca.filters = [wrongFilter];
+				if (inner) peca.inner.filters = [(peca.name == "fundoLabel" ? wrongFilterInner : wrongFilter)];
+				else peca.filters = [(peca.name == "fundoLabel" ? wrongFilterInner : wrongFilter)];
 			}
 			nTotal++;
 		}
@@ -456,8 +529,8 @@ package
 		private var tutoBaloonPos:Array;
 		private var tutoPos:int;
 		private var tutoSequence:Array = ["Monte a flor arrastando as peças.", 
-										  "Escreva o nome de cada peça que possui um campo de texto como esse.",
-										  "Ao passar o mouse sobre essas caixas de texto um grupo de peças será destacado.",
+										  "Escreva o nome da estrutura nas peças que possuem um campo de texto.",
+										  "Ao passar o mouse (ou clicar) em alguma caixa de texto, um grupo de peças será destacado.",
 										  "Ao terminar de montar e classificar clique aqui para avaliar sua resposta."];
 		
 		override public function iniciaTutorial(e:MouseEvent = null):void
@@ -468,14 +541,14 @@ package
 				addChild(balao);
 				balao.visible = false;
 				
-				pointsTuto = 	[new Point(250, 300),
-								new Point(473 , 542),
-								new Point(450 , 42),
+				pointsTuto = 	[new Point(230, 400),
+								new Point(230 , 250),
+								new Point(550 , 22),
 								new Point(55 , 35)];
 								
 				tutoBaloonPos = [["", ""],
-								[CaixaTexto.BOTTON, CaixaTexto.LAST],
-								[CaixaTexto.RIGHT, CaixaTexto.FIRST],
+								["", ""],
+								[CaixaTexto.TOP, CaixaTexto.LAST],
 								[CaixaTexto.TOP, CaixaTexto.FIRST]];
 			}
 			balao.removeEventListener(Event.CLOSE, closeBalao);
