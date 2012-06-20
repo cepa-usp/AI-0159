@@ -497,6 +497,12 @@ package
 				status.texts[item.name] = item.label.label.text;
 			}
 			
+			status.label_calice = label_calice.label.text;
+			status.label_corola = label_corola.label.text;
+			status.label_estame = label_estame.label.text;
+			status.label_androceu = label_androceu.label.text;
+			status.label_gineceu = label_gineceu.label.text;
+			
 			mementoSerialized = JSON.encode(status);
 		}
 		
@@ -513,6 +519,11 @@ package
 				item.label.label.text = status.texts[item.name];
 			}
 			
+			label_calice.label.text = status.label_calice;
+			label_corola.label.text = status.label_corola;
+			label_estame.label.text = status.label_estame;
+			label_androceu.label.text = status.label_androceu;
+			label_gineceu.label.text = status.label_gineceu;
 		}
 		
 		override public function reset(e:MouseEvent = null):void
