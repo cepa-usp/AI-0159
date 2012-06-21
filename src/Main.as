@@ -580,12 +580,12 @@ package
 				
 				pointsTuto = 	[new Point(230, 400),
 								new Point(230 , 250),
-								new Point(550 , 22),
+								new Point(585 , 30),
 								new Point(55 , 35)];
 								
 				tutoBaloonPos = [["", ""],
 								["", ""],
-								[CaixaTexto.TOP, CaixaTexto.LAST],
+								[CaixaTexto.RIGHT, CaixaTexto.FIRST],
 								[CaixaTexto.TOP, CaixaTexto.FIRST]];
 			}
 			balao.removeEventListener(Event.CLOSE, closeBalao);
