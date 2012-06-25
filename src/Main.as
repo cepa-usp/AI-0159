@@ -454,7 +454,7 @@ package
 			if (score >= 99) {
 				feedbackScreen.setText("Parabéns, você acertou!");
 			}else {
-				feedbackScreen.setText("Tem alguma coisa errada. Observe as peças destacadas em vermelho e tente responder novamente.");
+				feedbackScreen.setText("Tem alguma coisa errada: observe as peças destacadas em vermelho. Tente responder novamente ou estude mais um pouco as características de uma flor.");
 			}
 			
 		}
