@@ -705,7 +705,7 @@ package
 				if (scorm.get("cmi.mode" != "normal")) return;
 				
 				// Salva no LMS a nota do aluno.
-				var success:Boolean;// = scorm.set("cmi.score.raw", score.toString());
+				var success:Boolean = scorm.set("cmi.score.raw", score.toString());
 
 				// Notifica o LMS que esta atividade foi concluída.
 				success = scorm.set("cmi.completion_status", (completed ? "completed" : "incomplete"));
