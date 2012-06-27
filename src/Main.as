@@ -450,6 +450,7 @@ package
 			}
 			
 			score = Math.round((nCertas / nTotal) * 100);
+			if (score > 75) completed = true;
 			
 			if (score >= 99) {
 				feedbackScreen.setText("Parabéns, você acertou!");
@@ -457,6 +458,7 @@ package
 				feedbackScreen.setText("Tem alguma coisa errada: observe as peças destacadas em vermelho. Tente responder novamente ou estude mais um pouco as características de uma flor.");
 			}
 			
+			saveStatus();
 		}
 		
 		private function verificaTerminei():Boolean 
@@ -708,13 +710,13 @@ package
 				var success:Boolean = scorm.set("cmi.score.raw", score.toString());
 
 				// Notifica o LMS que esta atividade foi concluída.
-				success = scorm.set("cmi.completion_status", (completed ? "completed" : "incomplete"));
+				if(scorm.get("cmi.completion_status") != "completed") success = scorm.set("cmi.completion_status", (completed ? "completed" : "incomplete"));
 				
 				//success = scorm.set("cmi.exit", (completed ? "normal" : "suspend"));
 				
 				//Notifica o LMS se o aluno passou ou falhou na atividade, de acordo com a pontuação:
-				success = scorm.set("cmi.success_status", (score > 75 ? "passed" : "failed"));
-
+				if(scorm.get("cmi.success_status") != "passed") success = scorm.set("cmi.success_status", (score > 75 ? "passed" : "failed"));
+				
 				// Salva no LMS o exercício que deve ser exibido quando a AI for acessada novamente.
 				success = scorm.set("cmi.location", scormExercise.toString());
 				
